@@ -122,7 +122,33 @@ body{
   animation:fade .25s ease;
 }
 
-.card-title{font-weight:600}
+.card-title{
+  font-weight:600;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.card-title span{
+  cursor:pointer;
+}
+
+.edit-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:.6;
+  cursor:pointer;
+}
+
+.edit-icon:hover{opacity:1}
+
+.edit-icon svg{
+  width:14px;
+  height:14px;
+  stroke:#e5e7eb;
+}
+
 .card-time{font-size:12px;opacity:.5;margin-top:2px}
 
 .grid{
@@ -139,9 +165,21 @@ body{
   border-radius:10px;
   cursor:pointer;
   font-size:13px;
+  position:relative;
 }
 
 .num:hover{background:#1f2937}
+
+.num .del{
+  position:absolute;
+  top:2px;
+  right:4px;
+  font-size:10px;
+  opacity:.6;
+  cursor:pointer;
+}
+
+.num .del:hover{opacity:1}
 
 /* ACTIONS */
 .actions{
@@ -255,11 +293,11 @@ body{
         <circle cx="11" cy="11" r="8"></circle>
         <path d="M21 21l-4.3-4.3"></path>
       </svg>
-      <input id="search" placeholder="Search..." oninput="render()">
+      <input id="search" placeholder="Search..." oninput="playSound();render()">
     </div>
   </div>
 
-  <button class="menu-btn" onclick="toggleHistory()">
+  <button class="menu-btn" onclick="playSound();toggleHistory()">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
       <path d="M8 6h13M8 12h13M8 18h13"></path>
       <circle cx="3" cy="6" r="1.5"></circle>
@@ -271,7 +309,7 @@ body{
 
 <div class="form">
   <input id="name" placeholder="Nama catatan">
-  <button onclick="createNote()">Buat Catatan</button>
+  <button onclick="playSound();createNote()">Buat Catatan</button>
 </div>
 
 <div id="notes"></div>
@@ -279,7 +317,7 @@ body{
 <div class="history" id="history">
   <div class="history-header">
     <h3>History</h3>
-    <button class="close-btn" onclick="toggleHistory()">Tutup</button>
+    <button class="close-btn" onclick="playSound();toggleHistory()">Tutup</button>
   </div>
   <div id="historyList"></div>
 </div>
@@ -289,6 +327,13 @@ body{
 <script>
 let notes = JSON.parse(localStorage.getItem('notes')) || [];
 let history = JSON.parse(localStorage.getItem('history')) || [];
+
+const soundUrl = "popup.mp3";
+
+function playSound(){
+  let audio = new Audio(soundUrl);
+  audio.play().catch(()=>{});
+}
 
 function save(){
   localStorage.setItem('notes', JSON.stringify(notes));
@@ -321,6 +366,10 @@ function formatDate(){
   })+" WIB";
 }
 
+function normalize(num){
+  return num.replace(/\s+/g,'').replace('+','');
+}
+
 function createNote(){
   let name=document.getElementById('name').value.trim();
   if(!name) return toast("Nama catatan tidak boleh kosong");
@@ -337,25 +386,48 @@ function createNote(){
   document.getElementById('name').value='';
 }
 
+function renameNote(i){
+  playSound();
+  let oldName = notes[i].name;
+  let newName = prompt("Rename catatan", oldName);
+
+  if(!newName) return;
+
+  newName = newName.trim();
+
+  if(!newName) return toast("Nama tidak boleh kosong");
+
+  if(notes.some((n,idx)=>idx!==i && n.name.toLowerCase()===newName.toLowerCase()))
+    return toast("Nama sudah digunakan");
+
+  notes[i].name = newName;
+  save();
+  render();
+  addHistory("Rename: " + oldName + " → " + newName);
+
+  toast("Berhasil rename");
+}
+
 function addNumber(i,btn){
+  playSound();
   btn.classList.add("loading");
 
   setTimeout(()=>{
     let num=prompt("Masukkan nomor");
 
-    if(!num || !/^\+?\d+$/.test(num)){
+    if(!num || !/^[+\d\s]+$/.test(num)){
       btn.classList.remove("loading");
       return toast("Format nomor tidak valid");
     }
 
-    let clean=num.replace("+","");
+    let clean=normalize(num);
 
-    if(notes[i].numbers.some(n=>n.replace("+","")===clean)){
+    if(notes[i].numbers.some(n=>normalize(n)===clean)){
       btn.classList.remove("loading");
       return toast("Nomor sudah ada");
     }
 
-    notes[i].numbers.push(num);
+    notes[i].numbers.push(num.trim());
     save();
     render();
     addHistory("Nomor ditambahkan ke " + notes[i].name);
@@ -365,7 +437,17 @@ function addNumber(i,btn){
   },600);
 }
 
+function deleteNumber(i,j){
+  playSound();
+  notes[i].numbers.splice(j,1);
+  save();
+  render();
+  addHistory("Nomor dihapus dari " + notes[i].name);
+  toast("Nomor dihapus");
+}
+
 function copyAll(i,btn){
+  playSound();
   btn.classList.add("loading");
 
   setTimeout(()=>{
@@ -376,6 +458,7 @@ function copyAll(i,btn){
 }
 
 function deleteNote(i,btn){
+  playSound();
   btn.classList.add("loading");
 
   setTimeout(()=>{
@@ -389,6 +472,7 @@ function deleteNote(i,btn){
 }
 
 function copyNum(num){
+  playSound();
   navigator.clipboard.writeText(num);
   toast("Disalin");
 }
@@ -404,12 +488,23 @@ function render(){
   .forEach((n,i)=>{
     el.innerHTML+=`
     <div class="card">
-      <div class="card-title">${n.name}</div>
+      <div class="card-title">
+        <span onclick="renameNote(${i})">${n.name}</span>
+        <span class="edit-icon" onclick="renameNote(${i})">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/>
+          </svg>
+        </span>
+      </div>
       <div class="card-time">${n.time}</div>
 
       <div class="grid">
-        ${n.numbers.map(num=>`
-          <div class="num" onclick="copyNum('${num}')">${num}</div>
+        ${n.numbers.map((num,j)=>`
+          <div class="num">
+            <span onclick="copyNum('${num}')">${num}</span>
+            <span class="del" onclick="deleteNumber(${i},${j})">✕</span>
+          </div>
         `).join('')}
       </div>
 
