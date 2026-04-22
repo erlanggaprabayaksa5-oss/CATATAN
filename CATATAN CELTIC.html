@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catatan Nokos Celtic</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Outfit',sans-serif;
+}
+
+body{
+  background: radial-gradient(circle at top, #0f172a, #020617);
+  color:#e5e7eb;
+  min-height:100vh;
+  padding:16px;
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.left-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.title{
+  font-size:20px;
+  font-weight:600;
+}
+
+/* SEARCH */
+.search-box{
+  display:flex;
+  align-items:center;
+  background:#111827;
+  border-radius:12px;
+  padding:6px 10px;
+  gap:6px;
+  border:1px solid #1f2937;
+}
+
+.search-box svg{
+  width:14px;
+  height:14px;
+  stroke:#9ca3af;
+}
+
+.search-box input{
+  background:transparent;
+  border:none;
+  outline:none;
+  color:#fff;
+  width:110px;
+  font-size:12px;
+}
+
+/* MENU */
+.menu-btn{
+  background:#111827;
+  border:1px solid #1f2937;
+  color:#e5e7eb;
+  padding:10px;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+.menu-btn svg{
+  width:18px;
+  height:18px;
+  stroke:#e5e7eb;
+}
+
+/* FORM */
+.form{
+  background:#020617;
+  padding:16px;
+  border-radius:18px;
+  margin-bottom:18px;
+  border:1px solid #1f2937;
+}
+
+.form input{
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border:none;
+  border-radius:12px;
+  background:#111827;
+  color:#fff;
+}
+
+.form button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(135deg,#3b82f6,#8b5cf6);
+  color:#fff;
+  cursor:pointer;
+}
+
+/* CARD */
+.card{
+  background:#020617;
+  border-radius:18px;
+  padding:16px;
+  margin-bottom:14px;
+  border:1px solid #1f2937;
+  animation:fade .25s ease;
+}
+
+.card-title{font-weight:600}
+.card-time{font-size:12px;opacity:.5;margin-top:2px}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:12px 0;
+}
+
+.num{
+  background:#111827;
+  padding:8px;
+  text-align:center;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.num:hover{background:#1f2937}
+
+/* ACTIONS */
+.actions{
+  display:flex;
+  gap:8px;
+}
+
+.actions button{
+  flex:1;
+  border:none;
+  padding:8px;
+  border-radius:10px;
+  cursor:pointer;
+  background:#111827;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.actions button.loading{
+  opacity:.6;
+  pointer-events:none;
+}
+
+.actions button.loading::after{
+  content:"";
+  position:absolute;
+  width:16px;
+  height:16px;
+  border:2px solid #fff;
+  border-top-color:transparent;
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+}
+
+.actions svg{
+  width:16px;
+  height:16px;
+  stroke:#e5e7eb;
+}
+
+/* TOAST */
+.toast{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111827;
+  padding:10px 14px;
+  border-radius:12px;
+  opacity:0;
+  transition:.25s;
+  font-size:12px;
+}
+.toast.show{opacity:1}
+
+/* HISTORY */
+.history{
+  position:fixed;
+  top:0;
+  right:-100%;
+  width:80%;
+  height:100%;
+  background:#020617;
+  padding:16px;
+  transition:.3s;
+  overflow:auto;
+}
+
+.history.show{right:0}
+
+.history-header{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+
+.close-btn{
+  background:#111827;
+  border:none;
+  color:#fff;
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.history-item{
+  font-size:12px;
+  margin-bottom:6px;
+  opacity:.7;
+}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div class="left-header">
+    <div class="title">Stok Celtic</div>
+
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="M21 21l-4.3-4.3"></path>
+      </svg>
+      <input id="search" placeholder="Search..." oninput="render()">
+    </div>
+  </div>
+
+  <button class="menu-btn" onclick="toggleHistory()">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+      <path d="M8 6h13M8 12h13M8 18h13"></path>
+      <circle cx="3" cy="6" r="1.5"></circle>
+      <circle cx="3" cy="12" r="1.5"></circle>
+      <circle cx="3" cy="18" r="1.5"></circle>
+    </svg>
+  </button>
+</div>
+
+<div class="form">
+  <input id="name" placeholder="Nama catatan">
+  <button onclick="createNote()">Buat Catatan</button>
+</div>
+
+<div id="notes"></div>
+
+<div class="history" id="history">
+  <div class="history-header">
+    <h3>History</h3>
+    <button class="close-btn" onclick="toggleHistory()">Tutup</button>
+  </div>
+  <div id="historyList"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let notes = JSON.parse(localStorage.getItem('notes')) || [];
+let history = JSON.parse(localStorage.getItem('history')) || [];
+
+function save(){
+  localStorage.setItem('notes', JSON.stringify(notes));
+  localStorage.setItem('history', JSON.stringify(history));
+}
+
+function toast(msg){
+  let t=document.getElementById('toast');
+  t.innerText=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+function addHistory(text){
+  history.unshift(text);
+  if(history.length>30) history.pop();
+  save();
+  renderHistory();
+}
+
+function formatDate(){
+  let d=new Date();
+  return d.toLocaleString('id-ID',{
+    timeZone:'Asia/Jakarta',
+    day:'2-digit',
+    month:'short',
+    year:'numeric',
+    hour:'2-digit',
+    minute:'2-digit'
+  })+" WIB";
+}
+
+function createNote(){
+  let name=document.getElementById('name').value.trim();
+  if(!name) return toast("Nama catatan tidak boleh kosong");
+
+  if(notes.some(n=>n.name.toLowerCase()==name.toLowerCase()))
+    return toast("Nama catatan sudah digunakan");
+
+  notes.push({name,time:formatDate(),numbers:[]});
+  save();
+  render();
+  addHistory("Catatan dibuat: " + name);
+
+  toast("Catatan berhasil dibuat " + name);
+  document.getElementById('name').value='';
+}
+
+function addNumber(i,btn){
+  btn.classList.add("loading");
+
+  setTimeout(()=>{
+    let num=prompt("Masukkan nomor");
+
+    if(!num || !/^\+?\d+$/.test(num)){
+      btn.classList.remove("loading");
+      return toast("Format nomor tidak valid");
+    }
+
+    let clean=num.replace("+","");
+
+    if(notes[i].numbers.some(n=>n.replace("+","")===clean)){
+      btn.classList.remove("loading");
+      return toast("Nomor sudah ada");
+    }
+
+    notes[i].numbers.push(num);
+    save();
+    render();
+    addHistory("Nomor ditambahkan ke " + notes[i].name);
+
+    toast("Nomor berhasil ditambahkan ke "  + notes[i].name);
+
+  },600);
+}
+
+function copyAll(i,btn){
+  btn.classList.add("loading");
+
+  setTimeout(()=>{
+    navigator.clipboard.writeText(notes[i].numbers.join('\n'));
+    toast("Berhasil disalin");
+    btn.classList.remove("loading");
+  },400);
+}
+
+function deleteNote(i,btn){
+  btn.classList.add("loading");
+
+  setTimeout(()=>{
+    addHistory("Catatan dihapus: " + notes[i].name);
+    notes.splice(i,1);
+    save();
+    render();
+
+    toast("Catatan berhasil dihapus " + notes[i].name);
+  },400);
+}
+
+function copyNum(num){
+  navigator.clipboard.writeText(num);
+  toast("Disalin");
+}
+
+function render(){
+  let el=document.getElementById('notes');
+  let keyword=document.getElementById('search').value.toLowerCase();
+
+  el.innerHTML='';
+
+  notes
+  .filter(n=>n.name.toLowerCase().includes(keyword))
+  .forEach((n,i)=>{
+    el.innerHTML+=`
+    <div class="card">
+      <div class="card-title">${n.name}</div>
+      <div class="card-time">${n.time}</div>
+
+      <div class="grid">
+        ${n.numbers.map(num=>`
+          <div class="num" onclick="copyNum('${num}')">${num}</div>
+        `).join('')}
+      </div>
+
+      <div class="actions">
+        <button onclick="addNumber(${i}, this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+        </button>
+
+        <button onclick="copyAll(${i}, this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <rect x="2" y="2" width="13" height="13" rx="2"/>
+          </svg>
+        </button>
+
+        <button onclick="deleteNote(${i}, this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+            <path d="M3 6h18M8 6v14h8V6M10 10v6M14 10v6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    `;
+  });
+}
+
+function toggleHistory(){
+  document.getElementById('history').classList.toggle('show');
+}
+
+function renderHistory(){
+  let el=document.getElementById('historyList');
+  el.innerHTML='';
+  history.forEach(h=>{
+    el.innerHTML+=`<div class="history-item">${h}</div>`;
+  });
+}
+
+render();
+renderHistory();
+</script>
+
+</body>
+</html>
